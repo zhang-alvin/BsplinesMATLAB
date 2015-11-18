@@ -51,14 +51,13 @@ for i=1:N
 end
 
 %Get Splines
-%npts = 100;
 x_spline = linspace(-1,1,npts);
 bern_basis = getBernstein(p,x_spline);
 bspl = zeros(nshp_g,npts*N);
 for i = 1:nshp_l
     for eID = 1:N
         index = ien(eID,i);
-        bspl(index,1+npts*(eID-1):npts*(eID)) = C(i,:,eID)*bern_basis;
+        bspl(index,1+npts*(eID-1):npts*(eID)) = getBernstein(p,x_spline,'spline',C(i,:,eID)');
     end
 end
 
@@ -68,8 +67,8 @@ for eID=1:N
     x_coord(1+npts*(eID-1):npts*(eID)) = x_mesh(eID)*(1-x_spline)/2 + x_mesh(eID+1)*(x_spline+1)/2;
 end
 
-%figure(1)
-%plot(x_coord,bspl);
+figure(100)
+plot(x_coord,bspl);
 
 %Get quadrature points
 intorder = 5
