@@ -1,4 +1,4 @@
-function [approx,x_coord,K,F,coef]=bsplSetupAndSolve(p,N,npts,fun)
+function [approx,x_coord,K,F,coef,L2]=bsplSetupAndSolve(p,N,npts,fun)
 %% function that sets up BFEM and solves for the resulting solution
 
 % Single element case
@@ -70,13 +70,13 @@ end
 %plot(x_coord,bspl);
 
 %Get quadrature points
-intorder = 5
+intorder = p+1;
 [q,w] = lgwt(intorder,-1,1);
 q = flipud(q);
 w = flipud(w);
 
 %Define the shape functions once
-Nshp = zeros(nshp_l,length(q),eID);
+Nshp = zeros(nshp_l,length(q),N);
 
 for eID=1:N
     for i=1:nshp_l
@@ -131,3 +131,12 @@ coef = K\F;
 
 %Solution and post-processing
 approx=coef'*bspl;
+
+%Compute the L2 error
+
+L2=0.0;
+for eID = 1:N
+    x = x_mesh(eID)*(1-q)/2+x_mesh(eID+1)*(1+q)/2;
+    L2=L2+w'*(Nshp(:,:,eID)'*coef(ien(eID,:))-fun(x)).^2;
+end
+L2 = sqrt(L2);
