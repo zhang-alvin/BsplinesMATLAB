@@ -1,4 +1,4 @@
-function [approx,x_coord]=bsplSetupAndSolve(p,N,npts,fun)
+function [approx,x_coord,K,F,coef]=bsplSetupAndSolve(p,N,npts,fun)
 %% function that sets up BFEM and solves for the resulting solution
 
 % Single element case
@@ -66,8 +66,8 @@ for eID=1:N
     x_coord(1+npts*(eID-1):npts*(eID)) = x_mesh(eID)*(1-x_spline)/2 + x_mesh(eID+1)*(x_spline+1)/2;
 end
 
-figure(100)
-plot(x_coord,bspl);
+%figure(100)
+%plot(x_coord,bspl);
 
 %Get quadrature points
 intorder = 5
@@ -91,7 +91,6 @@ K = zeros(nshp_g);
 for eID = 1:N
     for i=1:nshp_l
         for j=1:nshp_l
-            temp = 0;
             temp = Nshp(i,:,eID).*Nshp(j,:,eID)*w;
             temp = temp*J(eID);
             K(ien(eID,i),ien(eID,j)) = K(ien(eID,i),ien(eID,j)) + temp;
@@ -104,12 +103,27 @@ end
 F = zeros(nshp_g,1);
 for eID = 1:N
     for i=1:nshp_l
-        temp=0;
         x = x_mesh(eID)*(1-q)/2+x_mesh(eID+1)*(1+q)/2;
         temp = Nshp(i,:,eID).*fun(x)'*w;
         temp = temp*J(eID);
         F(ien(eID,i))=F(ien(eID,i))+temp;
     end
+end
+
+%Apply Interpolatory BC
+F(1) = fun(min(x_coord));
+F(end) = fun(max(x_coord));
+K(1,1) = 1;
+K(end,end) = 1;
+K(1,2:end)=0;
+K(end,1:end-1)=0;
+for i=2:nshp_g-1
+    F(i) = F(i) - K(i,1)*F(1);
+    K(i,1) = 0;
+end
+for i=nshp_g-1:-1:2
+    F(i) = F(i) - K(i,end)*F(end);
+    K(i,end)=0;
 end
 
 %Solve
