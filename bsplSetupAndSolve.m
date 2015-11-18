@@ -1,4 +1,4 @@
-function [approx,x_coord,K,F,coef,L2]=bsplSetupAndSolve(p,N,npts,fun)
+function [approx,x_coord,K,F,coef,L2,comp_time]=bsplSetupAndSolve(p,N,npts,fun,before)
 %% function that sets up BFEM and solves for the resulting solution
 
 % Single element case
@@ -70,7 +70,7 @@ end
 %plot(x_coord,bspl);
 
 %Get quadrature points
-intorder = p+1;
+intorder = 2*(p+1);
 [q,w] = lgwt(intorder,-1,1);
 q = flipud(q);
 w = flipud(w);
@@ -128,6 +128,8 @@ end
 
 %Solve
 coef = K\F;
+
+comp_time = toc(before);
 
 %Solution and post-processing
 approx=coef'*bspl;
