@@ -52,7 +52,6 @@ end
 
 %Get Splines
 x_spline = linspace(-1,1,npts);
-bern_basis = getBernstein(p,x_spline);
 bspl = zeros(nshp_g,npts*N);
 for i = 1:nshp_l
     for eID = 1:N
@@ -76,19 +75,25 @@ intorder = 5
 q = flipud(q);
 w = flipud(w);
 
+%Define the shape functions once
+Nshp = zeros(nshp_l,length(q),eID);
+
+for eID=1:N
+    for i=1:nshp_l
+        Nshp(i,:,eID) = getBernstein(p,q','spline',C(i,:,eID)');
+    end
+end
+
 %LHS
 
 K = zeros(nshp_g);
-B = getBernstein(p,q);
+
 for eID = 1:N
     for i=1:nshp_l
-        N_i = C(i,:,eID)*B;
         for j=1:nshp_l
-            N_j = C(j,:,eID)*B;
             temp = 0;
             for k=1:length(q)
-                %temp=temp+B(i,k)*B(j,k)*w(k);
-                temp=temp+N_i(k)*N_j(k)*w(k);
+                temp=temp+Nshp(i,k,eID)*Nshp(j,k,eID)*w(k);
             end
             temp = temp*J(eID);
             K(ien(eID,i),ien(eID,j)) = K(ien(eID,i),ien(eID,j)) + temp;
@@ -98,17 +103,13 @@ end
 
 %RHS
 
-%fun = @(x) x.^2;
-
 F = zeros(nshp_g,1);
 for eID = 1:N
     for i=1:nshp_l
-        N_i = C(i,:,eID)*B;
         temp=0;
         for k=1:length(q)
             x = x_mesh(eID)*(1-q(k))/2+x_mesh(eID+1)*(1+q(k))/2;
-            %temp = temp+B(i,k)*fun(x)*w(k);
-            temp = temp+N_i(k)*fun(x)*w(k);
+            temp = temp+Nshp(i,k,eID)*fun(x)*w(k);
         end
         temp = temp*J(eID);
         F(ien(eID,i))=F(ien(eID,i))+temp;
