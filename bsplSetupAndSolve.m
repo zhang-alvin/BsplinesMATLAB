@@ -92,9 +92,7 @@ for eID = 1:N
     for i=1:nshp_l
         for j=1:nshp_l
             temp = 0;
-            for k=1:length(q)
-                temp=temp+Nshp(i,k,eID)*Nshp(j,k,eID)*w(k);
-            end
+            temp = Nshp(i,:,eID).*Nshp(j,:,eID)*w;
             temp = temp*J(eID);
             K(ien(eID,i),ien(eID,j)) = K(ien(eID,i),ien(eID,j)) + temp;
         end
@@ -107,10 +105,8 @@ F = zeros(nshp_g,1);
 for eID = 1:N
     for i=1:nshp_l
         temp=0;
-        for k=1:length(q)
-            x = x_mesh(eID)*(1-q(k))/2+x_mesh(eID+1)*(1+q(k))/2;
-            temp = temp+Nshp(i,k,eID)*fun(x)*w(k);
-        end
+        x = x_mesh(eID)*(1-q)/2+x_mesh(eID+1)*(1+q)/2;
+        temp = Nshp(i,:,eID).*fun(x)'*w;
         temp = temp*J(eID);
         F(ien(eID,i))=F(ien(eID,i))+temp;
     end
